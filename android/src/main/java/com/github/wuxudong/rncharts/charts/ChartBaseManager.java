@@ -27,7 +27,7 @@ import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.wuxudong.rncharts.data.DataExtract;
 import com.github.wuxudong.rncharts.listener.RNOnChartValueSelectedListener;
-import com.github.wuxudong.rncharts.markers.RNRectangleMarkerView;
+import com.github.wuxudong.rncharts.markers.RNLineMarkerView;
 import com.github.wuxudong.rncharts.utils.BridgeUtils;
 
 import java.util.ArrayList;
@@ -237,15 +237,11 @@ public abstract class ChartBaseManager<T extends Chart, U extends Entry> extends
             return;
         }
 
-        RNRectangleMarkerView marker = new RNRectangleMarkerView(chart.getContext());
+        RNLineMarkerView marker = new RNLineMarkerView(chart.getContext());
         marker.setChartView(chart);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP &&
-                BridgeUtils.validate(propMap, ReadableType.Number, "markerColor")) {
-            marker.getTvContent()
-                    .setBackgroundTintList(
-                            ColorStateList.valueOf(propMap.getInt("markerColor"))
-                    );
+        if (BridgeUtils.validate(propMap, ReadableType.Number, "markerColor")) {
+            marker.setLineColor(propMap.getInt("markerColor"));
         }
 
         if (BridgeUtils.validate(propMap, ReadableType.Number, "digits")) {
@@ -255,6 +251,7 @@ public abstract class ChartBaseManager<T extends Chart, U extends Entry> extends
         if (BridgeUtils.validate(propMap, ReadableType.Number, "textColor")) {
             marker.getTvContent().setTextColor(propMap.getInt("textColor"));
         }
+
         if (BridgeUtils.validate(propMap, ReadableType.Number, "textSize")) {
             marker.getTvContent().setTextSize(propMap.getInt("textSize"));
         }
@@ -340,7 +337,7 @@ public abstract class ChartBaseManager<T extends Chart, U extends Entry> extends
                     if (BridgeUtils.validate(limitLineMap, ReadableType.Number, "lineWidth")) {
                         limitLine.setLineWidth((float) limitLineMap.getDouble("lineWidth"));
                     }
-                    
+
                     if (BridgeUtils.validate(limitLineMap, ReadableType.Number, "valueTextColor")) {
                         limitLine.setTextColor(limitLineMap.getInt("valueTextColor"));
                     }
