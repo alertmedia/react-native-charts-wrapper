@@ -216,6 +216,7 @@ public abstract class ChartBaseManager<T extends Chart, U extends Entry> extends
     @ReactProp(name = "xAxis")
     public void setXAxis(Chart chart, ReadableMap propMap) {
         XAxis axis = chart.getXAxis();
+        axis.setMultiLineLabel(true);
 
         setCommonAxisConfig(chart, axis, propMap);
 
