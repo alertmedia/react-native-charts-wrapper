@@ -13,10 +13,10 @@ class RNCombinedChartView: RNBarLineChartViewBase {
     override var chart: CombinedChartView {
         return _chart
     }
-    
+
     override var dataExtract: DataExtract {
         return _dataExtract
-    }    
+    }
 
     override init(frame: CoreGraphics.CGRect) {
 
@@ -26,13 +26,19 @@ class RNCombinedChartView: RNBarLineChartViewBase {
         super.init(frame: frame)
 
         self._chart.delegate = self
+        self._chart.drawOrder = [
+          CombinedChartView.DrawOrder.line.rawValue,
+          CombinedChartView.DrawOrder.bar.rawValue,
+          CombinedChartView.DrawOrder.bubble.rawValue,
+          CombinedChartView.DrawOrder.candle.rawValue,
+          CombinedChartView.DrawOrder.scatter.rawValue];
         self.addSubview(_chart)
     }
 
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     func setDrawValueAboveBar(_ enabled: Bool) {
         _chart.drawValueAboveBarEnabled = enabled
     }
