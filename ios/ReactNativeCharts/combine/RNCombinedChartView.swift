@@ -26,12 +26,14 @@ class RNCombinedChartView: RNBarLineChartViewBase {
         super.init(frame: frame)
 
         self._chart.delegate = self
+        /*
         self._chart.drawOrder = [
           CombinedChartView.DrawOrder.line.rawValue,
           CombinedChartView.DrawOrder.bar.rawValue,
           CombinedChartView.DrawOrder.bubble.rawValue,
           CombinedChartView.DrawOrder.candle.rawValue,
           CombinedChartView.DrawOrder.scatter.rawValue];
+        */
         self.addSubview(_chart)
     }
 

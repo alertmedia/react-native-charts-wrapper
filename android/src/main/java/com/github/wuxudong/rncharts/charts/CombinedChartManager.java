@@ -22,9 +22,11 @@ public class CombinedChartManager extends BarLineChartBaseManager<CombinedChart,
         CombinedChart combinedChart = new CombinedChart(reactContext);
         combinedChart.setOnChartValueSelectedListener(new RNOnChartValueSelectedListener(combinedChart));
         combinedChart.setOnChartGestureListener(new RNOnChartGestureListener(combinedChart));
+        /*
         combinedChart.setDrawOrder(new DrawOrder[]{
                 DrawOrder.LINE, DrawOrder.BAR, DrawOrder.BUBBLE, DrawOrder.CANDLE, DrawOrder.SCATTER
         });
+        */
         return combinedChart;
     }
 
