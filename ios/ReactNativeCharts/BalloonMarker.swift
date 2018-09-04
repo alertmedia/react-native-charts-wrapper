@@ -23,23 +23,21 @@ open class BalloonMarker: MarkerView {
     open var arrowSize = CGSize(width: 15, height: 11)
     open var font: UIFont?
     open var textColor: UIColor?
-    open var separatorColor: UIColor?
-    open var accentColor: UIColor?
     open var minimumSize = CGSize()
 
     fileprivate var insets = UIEdgeInsetsMake(0.0, 8.0, 4.0, 8.0)
     fileprivate var topInsets = UIEdgeInsetsMake(20.0, 8.0, 8.0, 8.0)
 
     fileprivate var labelns: NSString?
+    fileprivate var labelHtml: NSAttributedString?
     fileprivate var _labelSize: CGSize = CGSize()
     fileprivate var _size: CGSize = CGSize()
     fileprivate var _paragraphStyle: NSMutableParagraphStyle?
-    fileprivate var _paragraphStyleLeft: NSMutableParagraphStyle?
     fileprivate var _drawAttributes = [String: AnyObject]()
 
     fileprivate var isMax: Bool?
     fileprivate var isMin: Bool?
-    fileprivate var isDH: Bool?
+    fileprivate var isHtml: Bool?
     fileprivate let barOverwrapHeight: CGFloat = 10.0
     fileprivate let strokeWidth: CGFloat = 0.1
   
@@ -51,9 +49,6 @@ open class BalloonMarker: MarkerView {
 
         _paragraphStyle = NSParagraphStyle.default.mutableCopy() as? NSMutableParagraphStyle
         _paragraphStyle?.alignment = .center
-
-        _paragraphStyleLeft = NSParagraphStyle.default.mutableCopy() as? NSMutableParagraphStyle
-        _paragraphStyleLeft?.alignment = .left
     }
 
     public required init?(coder aDecoder: NSCoder) {
@@ -253,57 +248,8 @@ open class BalloonMarker: MarkerView {
 
         UIGraphicsPushContext(context)
 
-        if(isDH ?? false) {
-          // for district heating graph
-          // draw text 4 times:
-          // (1) weather temperature (2) out-temperature (3) separater (4) in-temperature
-          _drawAttributes.removeAll()
-          _drawAttributes[NSFontAttributeName] = self.font
-          _drawAttributes[NSParagraphStyleAttributeName] = _paragraphStyle
-          _drawAttributes[NSForegroundColorAttributeName] = self.textColor
-
-          // 1: weather
-          let range = labelns.range(of: "\n")
-          if range.location != NSNotFound, labelns.length >= range.location+1 {
-            let labelWeather = "\n\(labelns.substring(from: range.location+1))" as NSString
-            labelWeather.draw(in: rect, withAttributes: _drawAttributes)
-          }
-
-          // 2: out-temperature
-          if let accentColor = self.accentColor {
-            let range = labelns.range(of: "\n")
-            _drawAttributes[NSForegroundColorAttributeName] = accentColor
-            _drawAttributes[NSParagraphStyleAttributeName] = _paragraphStyleLeft
-
-            if range.location != NSNotFound {
-              let labelWithoutWeather = labelns.substring(to: range.location) as NSString
-              labelWithoutWeather.draw(in: rect, withAttributes: _drawAttributes)
-            } else {
-              labelns.draw(in: rect, withAttributes: _drawAttributes)
-            }
-          }
-
-          // 3: separater
-          if let separatorColor = self.separatorColor {
-            let range = labelns.range(of: "/")
-            _drawAttributes[NSForegroundColorAttributeName] = separatorColor
-            _drawAttributes[NSParagraphStyleAttributeName] = _paragraphStyleLeft
-
-            if range.location != NSNotFound {
-              let labelWithoutOutTemeprature = labelns.substring(to: range.location+1) as NSString
-              labelWithoutOutTemeprature.draw(in: rect, withAttributes: _drawAttributes)
-            }
-          }
-          
-          // 4: in-temperature
-          let inRange = labelns.range(of: "/")
-          _drawAttributes[NSForegroundColorAttributeName] = self.textColor
-          _drawAttributes[NSParagraphStyleAttributeName] = _paragraphStyleLeft
-
-          if inRange.location != NSNotFound {
-            let labelInTemperature = labelns.substring(to: inRange.location) as NSString
-            labelInTemperature.draw(in: rect, withAttributes: _drawAttributes)
-          }
+        if self.isHtml ?? false, let labelHtml = self.labelHtml {
+          labelHtml.draw(in: rect)
 
         } else {
           _drawAttributes.removeAll()
@@ -340,32 +286,48 @@ open class BalloonMarker: MarkerView {
                   self.textColor = RCTConvert.uiColor(object["markerTextColor"].intValue)
                 }
               
-                if object["markerSeparatorColor"].exists() {
-                  self.separatorColor = RCTConvert.uiColor(object["markerSeparatorColor"].intValue)
-                }
-              
-                if object["markerAccentColor"].exists() {
-                  self.accentColor = RCTConvert.uiColor(object["markerAccentColor"].intValue)
-                }
-              
                 self.isMax = object["isMax"].exists() && object["isMax"].bool!
                 self.isMin = object["isMin"].exists() && object["isMin"].bool!
-                self.isDH = object["isDH"].exists() && object["isDH"].bool!
+                self.isHtml = object["isHtml"].exists() && object["isHtml"].bool!
             }
         }
 
+        // set normal label first
         labelns = label as NSString
-
+        labelHtml = nil
+      
         _drawAttributes.removeAll()
         _drawAttributes[NSFontAttributeName] = self.font
-        _drawAttributes[NSParagraphStyleAttributeName] = _paragraphStyleLeft
+        _drawAttributes[NSParagraphStyleAttributeName] = _paragraphStyle
         _drawAttributes[NSForegroundColorAttributeName] = self.textColor
-
+      
         _labelSize = labelns?.size(attributes: _drawAttributes) ?? CGSize.zero
-        _size.width = _labelSize.width // + self.insets.left + self.insets.right
+
+        // override with html label
+        if (self.isHtml ?? false) {
+          if let data = label.data(using: .utf8) {
+            
+            if let htmlLabel = try? NSMutableAttributedString(
+              data: data,
+              options: [NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType,
+                        NSCharacterEncodingDocumentAttribute: String.Encoding.utf8.rawValue],
+              documentAttributes: nil) {
+              
+              htmlLabel.addAttributes([
+                NSFontAttributeName: self.font!,
+                NSParagraphStyleAttributeName: _paragraphStyle!],
+                                      range: NSRange(location: 0, length: htmlLabel.length))
+              
+              labelHtml = htmlLabel
+              _labelSize = labelHtml?.size() ?? CGSize.zero
+            }
+          }
+        }
+      
+        // calculate drawing size
+        _size.width = _labelSize.width + self.insets.left + self.insets.right
         _size.height = _labelSize.height + self.insets.top + self.insets.bottom
         _size.width = max(minimumSize.width, _size.width)
         _size.height = max(minimumSize.height, _size.height)
-
     }
 }
