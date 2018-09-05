@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.text.Html;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -34,14 +35,8 @@ public class RNLineMarkerView extends MarkerView {
     private boolean isHtml = false;
     private int lineColor = Color.WHITE;
 
-    private float minPosX = -1;
-    private float minPosY = -1;
-
-    private float maxPosX = -1;
-    private float maxPosY = -1;
-
     private static final int BAR_OVERLAP_HEIGHT = 20;
-    private static final int BAR_X_OFFSET = 20;
+    private static final int BAR_X_OFFSET = 80;
 
     public RNLineMarkerView(Context context) {
         super(context, R.layout.line_marker);
@@ -60,7 +55,7 @@ public class RNLineMarkerView extends MarkerView {
     }
 
     @Override
-    public void refreshContent(Entry e, Highlight highlight) {
+    public void refreshContent(Entry e, Highlight highlight, float posX, float posY) {
         String text;
 
         if (e instanceof CandleEntry) {
@@ -125,12 +120,10 @@ public class RNLineMarkerView extends MarkerView {
 
                 final FrameLayout.LayoutParams params = (FrameLayout.LayoutParams) this.line.getLayoutParams();
                 if (this.isMin) {
-                    params.height = ((int)minPosY) - this.tvContent.getHeight() * 2 + BAR_OVERLAP_HEIGHT;
+                    params.height = ((int)posY) - this.tvContent.getHeight() * 2 + BAR_OVERLAP_HEIGHT;
                 } else {
-                    params.height = ((int)maxPosY) - this.tvContent.getHeight() + BAR_OVERLAP_HEIGHT;
+                    params.height = ((int)posY) - this.tvContent.getHeight() + BAR_OVERLAP_HEIGHT;
                 }
-
-                float posX = (this.isMin) ? this.minPosX : this.maxPosX;
 
                 if (posX + offset.x < BAR_X_OFFSET) {
                     params.gravity = Gravity.START;
@@ -159,8 +152,7 @@ public class RNLineMarkerView extends MarkerView {
             this.tvContent.setGravity(Gravity.CENTER);
             this.tvContent.setVisibility(VISIBLE);
         }
-
-        super.refreshContent(e, highlight);
+        super.refreshContent(e, highlight, posX, posY);
     }
 
     @Override
@@ -183,16 +175,6 @@ public class RNLineMarkerView extends MarkerView {
         }
         else if (chart != null && posX + width + offset.x > chart.getWidth() - BAR_X_OFFSET) {
             offset.x -= width/2;
-        }
-
-        // NOTE: at this point, this.line refers to the other marker.
-        // Only keep posX and posY here and calculate line height in #refreshContent
-        if (this.isMin) {
-            this.minPosX = posX;
-            this.minPosY = posY;
-        } else {
-            this.maxPosX = posX;
-            this.maxPosY = posY;
         }
 
         return offset;

@@ -44,7 +44,7 @@ public class RNRectangleMarkerView extends MarkerView {
     }
 
     @Override
-    public void refreshContent(Entry e, Highlight highlight) {
+    public void refreshContent(Entry e, Highlight highlight, float posX, float posY) {
         String text = "";
         
         if (e instanceof CandleEntry) {
@@ -74,7 +74,7 @@ public class RNRectangleMarkerView extends MarkerView {
             tvContent.setVisibility(VISIBLE);
         }
         
-        super.refreshContent(e, highlight);
+        super.refreshContent(e, highlight, posX, posY);
     }
     
     @Override
