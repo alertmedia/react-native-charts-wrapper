@@ -5,6 +5,7 @@
 import UIKit
 
 @objc(RNCombinedChartManager)
+@objcMembers
 open class RNCombinedChartManager: RCTViewManager, RNBarLineChartBaseManager {
   var _bridge: RCTBridge? {get{return self.bridge}}
   
@@ -39,6 +40,14 @@ open class RNCombinedChartManager: RCTViewManager, RNBarLineChartBaseManager {
   
   func fitScreen(_ reactTag: NSNumber) {
     (self as RNBarLineChartBaseManager)._fitScreen(reactTag)
+  }
+  
+  func highlights(_ reactTag: NSNumber, config: NSArray) {
+    (self as RNBarLineChartBaseManager)._highlights(reactTag, config: config)
+  }
+
+  func setDataAndLockIndex(_ reactTag: NSNumber, data: NSDictionary) {
+    (self as RNBarLineChartBaseManager)._setDataAndLockIndex(reactTag, data: data)
   }
 
 }

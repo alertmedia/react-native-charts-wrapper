@@ -25,22 +25,22 @@ open class BalloonMarker: MarkerView {
     open var textColor: UIColor?
     open var minimumSize = CGSize()
 
-    fileprivate var insets = UIEdgeInsetsMake(0.0, 8.0, 4.0, 8.0)
-    fileprivate var topInsets = UIEdgeInsetsMake(20.0, 8.0, 8.0, 8.0)
+    fileprivate var insets = UIEdgeInsets(top: 0.0,left: 8.0,bottom: 4.0,right: 8.0)
+    fileprivate var topInsets = UIEdgeInsets(top: 20.0,left: 8.0,bottom: 8.0,right: 8.0)
 
     fileprivate var labelns: NSString?
     fileprivate var labelHtml: NSAttributedString?
     fileprivate var _labelSize: CGSize = CGSize()
     fileprivate var _size: CGSize = CGSize()
     fileprivate var _paragraphStyle: NSMutableParagraphStyle?
-    fileprivate var _drawAttributes = [String: AnyObject]()
+    fileprivate var _drawAttributes = [NSAttributedString.Key: Any]()
 
     fileprivate var isMax: Bool?
     fileprivate var isMin: Bool?
     fileprivate var isHtml: Bool?
     fileprivate let barOverwrapHeight: CGFloat = 10.0
     fileprivate let strokeWidth: CGFloat = 0.1
-  
+
     public init(color: UIColor, font: UIFont, textColor: UIColor) {
         super.init(frame: CGRect.zero);
         self.color = color
@@ -67,7 +67,7 @@ open class BalloonMarker: MarkerView {
 
 
         //rect.origin.y -= _size.height
-      
+
         if point.x - _size.width / 2.0 < 0 {
           drawLeftLine(context: context, rect: rect, originalPoint: originalPoint)
         } else if (chart != nil && point.x + width - _size.width / 2.0 > (chart?.bounds.width)!) {
@@ -77,12 +77,12 @@ open class BalloonMarker: MarkerView {
           rect.origin.x -= _size.width / 2.0
           drawCenterLine(context: context, rect: rect, originalPoint: originalPoint)
         }
-      
+
         //rect.origin.y += self.insets.top
         //rect.size.height -= self.insets.top + self.insets.bottom
         //rect.size.height += originalPoint.y - _size.height
-      
-      
+
+
         /*
         if point.y - _size.height < 0 {
 
@@ -129,7 +129,7 @@ open class BalloonMarker: MarkerView {
       context.setStrokeColor((self.color?.cgColor)!)
       context.stroke(CGRect(x: x, y: y, width: self.strokeWidth, height: height))
     }
-  
+
     func drawLeftLine(context: CGContext, rect: CGRect, originalPoint: CGPoint) {
       let x = rect.origin.x
       let y = rect.origin.y + rect.size.height / 2.0
@@ -137,7 +137,7 @@ open class BalloonMarker: MarkerView {
       context.setStrokeColor((self.color?.cgColor)!)
       context.stroke(CGRect(x: x, y: y, width: self.strokeWidth, height: height))
     }
-  
+
     func drawRightLine(context: CGContext, rect: CGRect, originalPoint: CGPoint) {
       let x = rect.origin.x + rect.size.width
       let y = rect.origin.y + rect.size.height / 2.0
@@ -146,7 +146,7 @@ open class BalloonMarker: MarkerView {
       context.stroke(CGRect(x: x, y: y, width: self.strokeWidth, height: height))
     }
 
-  
+
     /*
     func drawCenterRect(context: CGContext, rect: CGRect) {
 
@@ -238,7 +238,7 @@ open class BalloonMarker: MarkerView {
         guard let labelns = self.labelns, labelns.length > 0 else {
           return
         }
-  
+
         var newPoint = point
         newPoint.y = (isMin ?? false) ? _size.height : 0.0
 
@@ -285,7 +285,7 @@ open class BalloonMarker: MarkerView {
                 if object["markerTextColor"].exists() {
                   self.textColor = RCTConvert.uiColor(object["markerTextColor"].intValue)
                 }
-              
+
                 self.isMax = object["isMax"].exists() && object["isMax"].bool!
                 self.isMin = object["isMin"].exists() && object["isMin"].bool!
                 self.isHtml = object["isHtml"].exists() && object["isHtml"].bool!
@@ -295,35 +295,35 @@ open class BalloonMarker: MarkerView {
         // set normal label first
         labelns = label as NSString
         labelHtml = nil
-      
+
         _drawAttributes.removeAll()
-        _drawAttributes[NSFontAttributeName] = self.font
-        _drawAttributes[NSParagraphStyleAttributeName] = _paragraphStyle
-        _drawAttributes[NSForegroundColorAttributeName] = self.textColor
-      
-        _labelSize = labelns?.size(attributes: _drawAttributes) ?? CGSize.zero
+        _drawAttributes[NSAttributedString.Key.font] = self.font
+        _drawAttributes[NSAttributedString.Key.paragraphStyle] = _paragraphStyle
+        _drawAttributes[NSAttributedString.Key.foregroundColor] = self.textColor
+
+        _labelSize = labelns?.size(withAttributes: _drawAttributes) ?? CGSize.zero
 
         // override with html label
         if (self.isHtml ?? false) {
           if let data = label.data(using: .utf8) {
-            
+
             if let htmlLabel = try? NSMutableAttributedString(
               data: data,
               options: [NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType,
                         NSCharacterEncodingDocumentAttribute: String.Encoding.utf8.rawValue],
               documentAttributes: nil) {
-              
+
               htmlLabel.addAttributes([
                 NSFontAttributeName: self.font!,
                 NSParagraphStyleAttributeName: _paragraphStyle!],
                                       range: NSRange(location: 0, length: htmlLabel.length))
-              
+
               labelHtml = htmlLabel
               _labelSize = labelHtml?.size() ?? CGSize.zero
             }
           }
         }
-      
+
         // calculate drawing size
         _size.width = _labelSize.width + self.insets.left + self.insets.right
         _size.height = _labelSize.height + self.insets.top + self.insets.bottom

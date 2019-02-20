@@ -10,8 +10,6 @@
 | `textSize`   | `number` |         |      |
 | `positionX`  | `number` |         |      |
 | `positionY`  | `number` |         |      |
-| `fontFamily` | `string` |         |      |
-| `fontStyle`  | `number` |         |      |
 
 ## Legend (prop for all charts)
 
@@ -33,7 +31,7 @@
 | `formToTextSpace` | `number`                                                      |         |      |
 | `custom`          | `{`<br />`colors: [number],`<br />`labels: [string]`<br />`}` |         |      |
 
-## Common Props for xAksis and yAxis
+## Common Props for xAxis and yAxis
 
 | Prop                       | Type                                                                                     | Default | Note                                                                                                                        |
 | -------------------------- | ---------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------- |
@@ -50,7 +48,7 @@
 | `axisLineColor`            | `bool`                                                                                   |         |                                                                                                                             |
 | `axisLineWidth`            | `bool`                                                                                   |         |                                                                                                                             |
 | `gridDashedLine`           | `{`<br />`lineLength: number,`<br />`spaceLength: number,`<br />`phase: number`<br />`}` |         |                                                                                                                             |
-| `limitLines`               | `number`                                                                                 |         |                                                                                                                             |
+| `limitLines`               | array : `[{ limit: number, label: string, lineColor: number, lineWidth: number, valueTextColor: number, valueFont: number, labelPosition: string, lineDashPhase: number, lineDashLengths: [number] }]`                                                                                 |         |                                                                                                                             |
 | `drawLimitLinesBehindData` | `bool`                                                                                   |         |                                                                                                                             |
 | `axisMaximum`              | `number`                                                                                 |         |                                                                                                                             |
 | `axisMinimum`              | `number`                                                                                 |         |                                                                                                                             |
@@ -62,7 +60,7 @@
 | `valueFormatter`           | one of `'largeValue', 'percent', 'date', string, [string]`                               |         |                                                                                                                             |
 | `valueFormatterPattern`    | `string`                                                                                 |         |
 
-## xAksis
+## xAxis
 
 #### Common props plus props below.
 
@@ -70,10 +68,10 @@
 | ------------------------ | -------- | ------- | ---- |
 | `labelRotationAngle`     | `number` |         |      |
 | `avoidFirstLastClipping` | `bool`   |         |      |
-| `position`               | `string` |         |      |
+| `position`               | `string` |         | Should be in upper case. you will get an error in android if the position is in lower case      |
 | `valueFormatterPattern`  | `string` |         |      |
 
-## yAksis
+## yAxis
 
 #### Common props plus props below.
 
@@ -81,7 +79,7 @@
 | ------------- | ------------------------------------------------------------------------------------- | ------- | ---- |
 | `inverted`    | `number`                                                                              |         |      |
 | `spaceTop`    | `bool`                                                                                |         |      |
-| `spaceBottom` | `string`                                                                              |         |      |
+| `spaceBottom` | `number`                                                                              |         |      |
 | `position`    | `number`                                                                              |         |      |
 | `maxWidth`    | `bool`                                                                                |         |      |
 | `minWidth`    | `string`                                                                              |         |      |
@@ -263,6 +261,14 @@ type lineScatterCandleRadar {
 
 ```
 type lineRadar 	{
+  fillGradient: {
+    colors: [number],
+    // iOS
+    positions: [numbers],
+    angle: number,
+    //Android
+    orientation: 'TOP_BOTTOM' | 'TR_BL' | 'RIGHT_LEFT' | 'BR_TL' | 'BOTTOM_TOP' | 'BL_TR' | 'LEFT_RIGHT' | 'TL_BR',
+  },
   fillColor: number,
   fillAlpha: number,
   drawFilled: function
@@ -415,8 +421,8 @@ type pieData {
 
         sliceSpace: number,
         selectionShift: number,
-        xValuePosition: string,
-        yValuePosition: string
+        xValuePosition: string, // INSIDE_SLICE,OUTSIDE_SLICE
+        yValuePosition: string // INSIDE_SLICE,OUTSIDE_SLICE
       }
     }
   ]
