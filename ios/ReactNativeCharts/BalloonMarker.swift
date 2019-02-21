@@ -253,9 +253,9 @@ open class BalloonMarker: MarkerView {
 
         } else {
           _drawAttributes.removeAll()
-          _drawAttributes[NSFontAttributeName] = self.font
-          _drawAttributes[NSParagraphStyleAttributeName] = _paragraphStyle
-          _drawAttributes[NSForegroundColorAttributeName] = self.textColor
+          _drawAttributes[.font] = self.font
+          _drawAttributes[.paragraphStyle] = _paragraphStyle
+          _drawAttributes[.foregroundColor] = self.textColor
           labelns.draw(in: rect, withAttributes: _drawAttributes)
         }
 
@@ -309,14 +309,14 @@ open class BalloonMarker: MarkerView {
 
             if let htmlLabel = try? NSMutableAttributedString(
               data: data,
-              options: [NSDocumentTypeDocumentAttribute: NSHTMLTextDocumentType,
-                        NSCharacterEncodingDocumentAttribute: String.Encoding.utf8.rawValue],
+              options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.html,
+                        NSAttributedString.DocumentReadingOptionKey.characterEncoding: String.Encoding.utf8.rawValue],
               documentAttributes: nil) {
 
               htmlLabel.addAttributes([
-                NSFontAttributeName: self.font!,
-                NSParagraphStyleAttributeName: _paragraphStyle!],
-                                      range: NSRange(location: 0, length: htmlLabel.length))
+                .font: self.font!,
+                .paragraphStyle: _paragraphStyle!],
+                range: NSRange(location: 0, length: htmlLabel.length))
 
               labelHtml = htmlLabel
               _labelSize = labelHtml?.size() ?? CGSize.zero
