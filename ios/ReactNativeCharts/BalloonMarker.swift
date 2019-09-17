@@ -24,7 +24,7 @@ open class BalloonMarker: MarkerView {
     open var minimumSize = CGSize()
 
     fileprivate var insets = UIEdgeInsets(top: 0.0,left: 8.0,bottom: 4.0,right: 8.0)
-    fileprivate var topInsets = UIEdgeInsets(top: 20.0,left: 8.0,bottom: 8.0,right: 8.0)
+    fileprivate let margin = 8.0
 
     fileprivate var labelns: NSString?
     fileprivate var labelHtml: NSAttributedString?
@@ -72,7 +72,8 @@ open class BalloonMarker: MarkerView {
         }
         */
 
-        if point.y - _size.height - arrowSize.height < 0 {
+        if point.y - _size.height - arrowSize.height - margin < 0 {
+            rect.origin.y += margin
 
             if point.x - _size.width / 1.2 < 0 {
                 drawTopLeftRect(context: context, rect: rect)
@@ -86,7 +87,7 @@ open class BalloonMarker: MarkerView {
             isUpwards = true
 
         } else {
-            rect.origin.y -= _size.height + arrowSize.height
+            rect.origin.y -= _size.height + arrowSize.height + margin
 
             if point.x - _size.width / 1.2 < 0 {
                 drawLeftRect(context: context, rect: rect)
