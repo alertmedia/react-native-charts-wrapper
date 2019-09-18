@@ -23,7 +23,7 @@ open class BalloonMarker: MarkerView {
     open var textColor: UIColor?
     open var minimumSize = CGSize()
 
-    fileprivate var insets = UIEdgeInsets(top: 0.0,left: 8.0,bottom: 4.0,right: 8.0)
+    fileprivate var insets = UIEdgeInsets(top: 8.0,left: 8.0,bottom: 8.0,right: 8.0)
     fileprivate let margin: CGFloat = 8.0
 
     fileprivate var labelns: NSString?
