@@ -25,6 +25,7 @@ import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.wuxudong.rncharts.data.DataExtract;
 import com.github.wuxudong.rncharts.markers.RNLineMarkerView;
+import com.github.wuxudong.rncharts.markers.RNRectangleMarkerView;
 import com.github.wuxudong.rncharts.utils.BridgeUtils;
 import com.github.wuxudong.rncharts.utils.EasingFunctionHelper;
 import com.github.wuxudong.rncharts.utils.TypefaceUtils;
@@ -268,12 +269,15 @@ public abstract class ChartBaseManager<T extends Chart, U extends Entry> extends
             return;
         }
 
-        RNLineMarkerView marker = new RNLineMarkerView(chart.getContext());
+        RNRectangleMarkerView marker = new RNRectangleMarkerView(chart.getContext());
+        //RNLineMarkerView marker = new RNRectangleMarkerView(chart.getContext());
         marker.setChartView(chart);
 
+        /* only for RNLineMarkerView
         if (BridgeUtils.validate(propMap, ReadableType.Number, "markerColor")) {
             marker.setLineColor(propMap.getInt("markerColor"));
         }
+        */
 
         if (BridgeUtils.validate(propMap, ReadableType.Number, "digits")) {
             marker.setDigits(propMap.getInt("digits"));
