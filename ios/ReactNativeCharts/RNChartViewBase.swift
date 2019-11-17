@@ -437,10 +437,9 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
 
         var markerFont = UIFont.boldSystemFont(ofSize: 12.0)
 
-        if json["textSize"].float != nil {
+        if json["textSize"].exists() && json["textSize"].float != nil {
             markerFont = markerFont.withSize(CGFloat(json["textSize"].floatValue))
         }
-
 
         // TODO fontFamily, fontStyle
 
@@ -448,6 +447,11 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
             color: RCTConvert.uiColor(json["markerColor"].intValue),
             font: markerFont,
             textColor: RCTConvert.uiColor(json["textColor"].intValue))
+
+        if json["useLineIndicator"].exists() && json["useLineIndicator"].boolValue {
+            balloonMarker.useLineIndicator = true
+        }
+
         chart.marker = balloonMarker
 
         balloonMarker.chartView = chart

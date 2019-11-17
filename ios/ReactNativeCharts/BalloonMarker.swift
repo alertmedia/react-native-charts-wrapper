@@ -22,9 +22,11 @@ open class BalloonMarker: MarkerView {
     open var font: UIFont?
     open var textColor: UIColor?
     open var minimumSize = CGSize()
+    open var useLineIndicator: Bool?
 
     fileprivate var insets = UIEdgeInsets(top: 8.0,left: 8.0,bottom: 8.0,right: 8.0)
     fileprivate let margin: CGFloat = 8.0
+    fileprivate let shadowMargin: CGFloat = 0.0
 
     fileprivate var labelns: NSString?
     fileprivate var labelHtml: NSAttributedString?
@@ -44,6 +46,7 @@ open class BalloonMarker: MarkerView {
         self.color = color
         self.font = font
         self.textColor = textColor
+        self.useLineIndicator = false
 
         _paragraphStyle = NSParagraphStyle.default.mutableCopy() as? NSMutableParagraphStyle
         _paragraphStyle?.alignment = .center
@@ -56,22 +59,40 @@ open class BalloonMarker: MarkerView {
 
     func drawRect(context: CGContext, point: CGPoint, originalPoint: CGPoint) -> (CGRect, Bool) {
 
-        let chart = super.chartView
-        var rect = CGRect(origin: point, size: _size)
-        var isUpwards = false
+      let chart = super.chartView
+      var rect = CGRect(origin: point, size: _size)
+      var isUpwards = false
 
-        /*
-        if point.x - _size.width / 2.0 < 0 {
-          drawLeftLine(context: context, rect: rect, originalPoint: originalPoint)
-        } else if (chart != nil && point.x + width - _size.width / 2.0 > (chart?.bounds.width)!) {
+      if self.useLineIndicator! {
+        // Marker upwards rect only
+        rect.origin.y = 0
+
+        if point.x - _size.width / 1.2 < 0 {
+          if originalPoint.y < _size.height + margin {
+            rect.origin.x += margin
+          }
+          drawLeftRect(context: context, rect: rect, originalPoint: originalPoint)
+
+        } else if (chart != nil && point.x + _size.width * 0.8 > (chart?.bounds.width)!) {
+          if originalPoint.y < _size.height + margin {
+            rect.origin.x -= margin
+          }
           rect.origin.x -= _size.width
-          drawRightLine(context: context, rect: rect, originalPoint: originalPoint)
-        } else {
-          rect.origin.x -= _size.width / 2.0
-          drawCenterLine(context: context, rect: rect, originalPoint: originalPoint)
-        }
-        */
+          drawRightRect(context: context, rect: rect, originalPoint: originalPoint)
 
+        } else {
+          if originalPoint.y < _size.height + margin {
+            if originalPoint.x < (chart?.bounds.width)! / 2.0 {
+                rect.origin.x += rect.size.width / 2.0 + margin
+            } else {
+              rect.origin.x -= rect.size.width / 2.0 + margin
+            }
+          }
+          rect.origin.x -= _size.width / 2.0
+          drawCenterRect(context: context, rect: rect, originalPoint: originalPoint)
+        }
+      } else {
+        // Marker with upwards/downwards rect
         if point.y - _size.height - arrowSize.height - margin < 0 {
             rect.origin.y += margin
 
@@ -90,15 +111,28 @@ open class BalloonMarker: MarkerView {
             rect.origin.y -= _size.height + arrowSize.height + margin
 
             if point.x - _size.width / 1.2 < 0 {
-                drawLeftRect(context: context, rect: rect)
+                drawLeftRect(context: context, rect: rect, originalPoint: originalPoint)
             } else if (chart != nil && point.x + _size.width * 0.8 > (chart?.bounds.width)!) {
                 rect.origin.x -= _size.width
-                drawRightRect(context: context, rect: rect)
+                drawRightRect(context: context, rect: rect, originalPoint: originalPoint)
             } else {
                 rect.origin.x -= _size.width / 2.0
-                drawCenterRect(context: context, rect: rect)
+                drawCenterRect(context: context, rect: rect, originalPoint: originalPoint)
             }
         }
+      }
+
+        /* Marker with line
+        if point.x - _size.width / 2.0 < 0 {
+          drawLeftLine(context: context, rect: rect, originalPoint: originalPoint)
+        } else if (chart != nil && point.x + width - _size.width / 2.0 > (chart?.bounds.width)!) {
+          rect.origin.x -= _size.width
+          drawRightLine(context: context, rect: rect, originalPoint: originalPoint)
+        } else {
+          rect.origin.x -= _size.width / 2.0
+          drawCenterLine(context: context, rect: rect, originalPoint: originalPoint)
+        }
+        */
 
         return (rect, isUpwards)
     }
@@ -129,80 +163,168 @@ open class BalloonMarker: MarkerView {
     }
     */
 
-    func drawCenterRect(context: CGContext, rect: CGRect) {
-        context.setFillColor((color?.cgColor)!)
-        context.beginPath()
-        context.move(to: CGPoint(x: rect.origin.x, y: rect.origin.y))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + (rect.size.width + arrowSize.width) / 2.0, y: rect.origin.y + rect.size.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width / 2.0, y: rect.origin.y + rect.size.height + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + (rect.size.width - arrowSize.width) / 2.0, y: rect.origin.y + rect.size.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y))
-        context.fillPath()
+    func drawCenterRect(context: CGContext, rect: CGRect, originalPoint: CGPoint) {
+      let topLeft = CGPoint(x: rect.origin.x + self.shadowMargin, y: rect.origin.y + self.shadowMargin)
+      let topRight = CGPoint(x: rect.origin.x + rect.size.width - self.shadowMargin, y: rect.origin.y + self.shadowMargin)
+      let bottomLeft = CGPoint(x: rect.origin.x + self.shadowMargin, y: rect.origin.y + rect.size.height - self.shadowMargin)
+      let bottomRight = CGPoint(x: rect.origin.x + rect.size.width - self.shadowMargin, y: rect.origin.y + rect.size.height - self.shadowMargin)
+
+      context.setFillColor((color?.cgColor)!)
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0)
+
+      context.beginPath()
+      context.move(to: CGPoint(x: topLeft.x, y: topLeft.y))
+      context.addLine(to: CGPoint(x: topRight.x, y: topRight.y))
+      context.addLine(to: CGPoint(x: bottomRight.x, y: bottomRight.y))
+      if !self.useLineIndicator! {
+        context.addLine(to: CGPoint(x: bottomRight.x - (rect.size.width + arrowSize.width) / 2.0, y: bottomRight.y))
+        context.addLine(to: CGPoint(x: bottomRight.x - rect.size.width / 2.0, y: bottomLeft.y + arrowSize.height))
+        context.addLine(to: CGPoint(x: bottomRight.x - (rect.size.width - arrowSize.width) / 2.0, y: bottomRight.y))
+      }
+      context.addLine(to: CGPoint(x: bottomLeft.x, y: bottomLeft.y))
+      context.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y))
+      context.fillPath()
+
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0, color: nil)
+
+      if self.useLineIndicator! {
+        context.setStrokeColor((self.textColor?.cgColor)!)
+        context.strokeLineSegments(between: [CGPoint(x: bottomLeft.x+rect.size.width/2, y: bottomLeft.y-0.5), originalPoint])
+      }
+
+      /*
+        let x = rect.origin.x + rect.size.width / 2.0
+        let y = rect.origin.y + rect.size.height
+        let height = originalPoint.y - (rect.origin.y + rect.size.height) + self.barOverwrapHeight
+        context.setStrokeColor((self.color?.cgColor)!)
+        context.stroke(CGRect(x: x, y: y, width: self.strokeWidth, height: height))
+        */
     }
 
-    func drawLeftRect(context: CGContext, rect: CGRect) {
-        context.setFillColor((color?.cgColor)!)
-        context.beginPath()
-        context.move(to: CGPoint(x: rect.origin.x, y: rect.origin.y))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + arrowSize.width / 2.0, y: rect.origin.y + rect.size.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y))
-        context.fillPath()
+    func drawLeftRect(context: CGContext, rect: CGRect, originalPoint: CGPoint) {
+      let topLeft = CGPoint(x: rect.origin.x + self.shadowMargin, y: rect.origin.y + self.shadowMargin)
+      let topRight = CGPoint(x: rect.origin.x + rect.size.width - self.shadowMargin, y: rect.origin.y + self.shadowMargin)
+      let bottomLeft = CGPoint(x: rect.origin.x + self.shadowMargin, y: rect.origin.y + rect.size.height - self.shadowMargin)
+      let bottomRight = CGPoint(x: rect.origin.x + rect.size.width - self.shadowMargin, y: rect.origin.y + rect.size.height - self.shadowMargin)
+
+      context.setFillColor((color?.cgColor)!)
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0)
+
+      context.beginPath()
+      context.move(to: CGPoint(x: topLeft.x, y: topLeft.y))
+      context.addLine(to: CGPoint(x: topRight.x, y: topRight.y))
+      context.addLine(to: CGPoint(x: bottomRight.x, y: bottomRight.y))
+      if self.useLineIndicator! {
+        context.addLine(to: CGPoint(x: bottomLeft.x, y: bottomLeft.y))
+      } else {
+        context.addLine(to: CGPoint(x: bottomLeft.x + arrowSize.width / 2.0, y: bottomLeft.y))
+        context.addLine(to: CGPoint(x: bottomLeft.x, y: bottomLeft.y + arrowSize.height))
+      }
+      context.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y))
+      context.fillPath()
+
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0, color: nil)
+
+      if self.useLineIndicator! {
+        context.setStrokeColor((self.textColor?.cgColor)!)
+        context.strokeLineSegments(between: [CGPoint(x: bottomLeft.x+0.5, y: bottomLeft.y), originalPoint])
+      }
+
+      /*
+      let x = rect.origin.x + 0.5
+      let y = rect.origin.y + rect.size.height / 2.0
+      let height = originalPoint.y - (rect.origin.y + rect.size.height / 2.0) + self.barOverwrapHeight
+      context.setStrokeColor((self.color?.cgColor)!)
+      context.stroke(CGRect(x: x, y: y, width: self.strokeWidth, height: height))
+      */
     }
 
-    func drawRightRect(context: CGContext, rect: CGRect) {
-        context.setFillColor((color?.cgColor)!)
-        context.beginPath()
-        context.move(to: CGPoint(x: rect.origin.x, y: rect.origin.y))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x  + rect.size.width - arrowSize.width / 2.0, y: rect.origin.y + rect.size.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y))
-        context.fillPath()
+    func drawRightRect(context: CGContext, rect: CGRect, originalPoint: CGPoint) {
+      let topLeft = CGPoint(x: rect.origin.x + self.shadowMargin, y: rect.origin.y + self.shadowMargin)
+      let topRight = CGPoint(x: rect.origin.x + rect.size.width - self.shadowMargin, y: rect.origin.y + self.shadowMargin)
+      let bottomLeft = CGPoint(x: rect.origin.x + self.shadowMargin, y: rect.origin.y + rect.size.height - self.shadowMargin)
+      let bottomRight = CGPoint(x: rect.origin.x + rect.size.width - self.shadowMargin, y: rect.origin.y + rect.size.height - self.shadowMargin)
+
+      context.setFillColor((color?.cgColor)!)
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0)
+
+      context.beginPath()
+      context.move(to: CGPoint(x: topLeft.x, y: topLeft.y))
+      context.addLine(to: CGPoint(x: topRight.x, y: topRight.y))
+      if self.useLineIndicator! {
+        context.addLine(to: CGPoint(x: bottomRight.x, y: bottomRight.y))
+      } else {
+        context.addLine(to: CGPoint(x: bottomRight.x, y: bottomRight.y + arrowSize.height))
+        context.addLine(to: CGPoint(x: bottomRight.x - arrowSize.width / 2.0, y: bottomRight.y))
+      }
+      context.addLine(to: CGPoint(x: bottomLeft.x, y: bottomLeft.y))
+      context.addLine(to: CGPoint(x: topLeft.x, y: topLeft.y))
+      context.fillPath()
+
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0, color: nil)
+
+      if self.useLineIndicator! {
+        context.setStrokeColor((self.textColor?.cgColor)!)
+        context.strokeLineSegments(between: [CGPoint(x: bottomRight.x-0.5, y: bottomRight.y), originalPoint])
+      }
+
+      /*
+      let x = rect.origin.x + rect.size.width - 0.5
+      let y = rect.origin.y + rect.size.height / 2.0
+      let height = originalPoint.y - (rect.origin.y + rect.size.height / 2.0) + self.barOverwrapHeight
+      context.setStrokeColor((self.color?.cgColor)!)
+      context.stroke(CGRect(x: x, y: y, width: self.strokeWidth, height: height))
+      */
     }
 
     func drawTopCenterRect(context: CGContext, rect: CGRect) {
-        context.setFillColor((color?.cgColor)!)
-        context.beginPath()
-        context.move(to: CGPoint(x: rect.origin.x + rect.size.width / 2.0, y: rect.origin.y))
-        context.addLine(to: CGPoint(x: rect.origin.x + (rect.size.width + arrowSize.width) / 2.0, y: rect.origin.y + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + (rect.size.width - arrowSize.width) / 2.0, y: rect.origin.y + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width / 2.0, y: rect.origin.y))
-        context.fillPath()
+      context.setFillColor((color?.cgColor)!)
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0)
+
+      context.beginPath()
+      context.move(to: CGPoint(x: rect.origin.x + rect.size.width / 2.0, y: rect.origin.y))
+      context.addLine(to: CGPoint(x: rect.origin.x + (rect.size.width + arrowSize.width) / 2.0, y: rect.origin.y + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x + (rect.size.width - arrowSize.width) / 2.0, y: rect.origin.y + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width / 2.0, y: rect.origin.y))
+      context.fillPath()
+
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0, color: nil)
     }
 
     func drawTopLeftRect(context: CGContext, rect: CGRect) {
-        context.setFillColor((color?.cgColor)!)
-        context.beginPath()
-        context.move(to: CGPoint(x: rect.origin.x, y: rect.origin.y))
-        context.addLine(to: CGPoint(x: rect.origin.x + arrowSize.width / 2.0, y: rect.origin.y + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y))
-        context.fillPath()
+      context.setFillColor((color?.cgColor)!)
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0)
+
+      context.beginPath()
+      context.move(to: CGPoint(x: rect.origin.x, y: rect.origin.y))
+      context.addLine(to: CGPoint(x: rect.origin.x + arrowSize.width / 2.0, y: rect.origin.y + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y))
+      context.fillPath()
+
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0, color: nil)
     }
 
     func drawTopRightRect(context: CGContext, rect: CGRect) {
-        context.setFillColor((color?.cgColor)!)
-        context.beginPath()
-        context.move(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width - arrowSize.width / 2.0, y: rect.origin.y + arrowSize.height))
-        context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y))
-        context.fillPath()
+      context.setFillColor((color?.cgColor)!)
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0)
+
+      context.beginPath()
+      context.move(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y))
+      context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y + rect.size.height + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + rect.size.height + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x, y: rect.origin.y + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width - arrowSize.width / 2.0, y: rect.origin.y + arrowSize.height))
+      context.addLine(to: CGPoint(x: rect.origin.x + rect.size.width, y: rect.origin.y))
+      context.fillPath()
+
+      context.setShadow(offset: CGSize(width: 0.0, height: 2.0), blur: 4.0, color: nil)
     }
 
 
@@ -239,6 +361,7 @@ open class BalloonMarker: MarkerView {
         }
 
         UIGraphicsPopContext()
+
 
         context.restoreGState()
     }
