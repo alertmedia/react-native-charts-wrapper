@@ -2,21 +2,21 @@
 
 ## Environment:
 
-Outdated react-native version may cause some anonying problems, so keep them update to date.
+Outdated react-native version may cause some anonying problems, so keep them up to date.
 
 This is my environment.
 
 ```
 $ yarn -v
-1.9.4
+1.16.0
 
 $ react-native -v
 react-native-cli: 2.0.1
 
 $ pod --version
-1.6.1
+1.7.4
 
-Xcode 10.2
+Xcode 11.0
 
 swift 5
 
@@ -84,15 +84,15 @@ const styles = StyleSheet.create({
 
 #### 1. update android/build.gradle, upgrade gradle tools version, add jitpack.io
 
-add `maven { url "https://jitpack.io" }` under allprojects -> repositories, IT IS USED BY MPAndroidChart
+add `maven { url "https://jitpack.io" }` under allprojects -> repositories if it is absent, IT IS USED BY MPAndroidChart
 
 make sure compileSdkVersion >= 28
 
-#### 2. make sure gradle version >= 4.10.1 in android/gradle/wrapper/gradle-wrapper.properties 
+#### 2. make sure gradle version >= 5.1.1 in android/gradle/wrapper/gradle-wrapper.properties 
 
 #### 3. link subproject
 
-*   **Mostly automatic install with react-native**
+*   **Mostly automatic install with react-native link**
 
 		react-native link react-native-charts-wrapper
 				
@@ -144,75 +144,18 @@ react-native run-android, that is it.
 
 ## iOS
 
-* add postinstall in package.json
-
-```
-  "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start",
-    "test": "jest",        
-    "postinstall": "sed -i '' 's/#import <RCTAnimation\\/RCTValueAnimatedNode.h>/#import \"RCTValueAnimatedNode.h\"/' ./node_modules/react-native/Libraries/NativeAnimation/RCTNativeAnimatedNodesManager.h"
-
-  }
-
-```
-
-* run `yarn install` again
 * link subproject
 
-	*   **use cocoapods(suggested), notice cocoapod is not compatible with rn 0.60.x due to issue [581](https://github.com/wuxudong/react-native-charts-wrapper/issues/581)**
-
-		* create ios/Podfile
-
-		```
-		platform :ios, '9.0'
-			
-		use_frameworks!
-			
-		target 'demo' do
-		    pod 'yoga', path: '../node_modules/react-native/ReactCommon/yoga/'
-		    pod 'React', path: '../node_modules/react-native/', :subspecs => [
-		    'Core',
-		    'ART',
-		    'RCTActionSheet',
-		    'RCTAnimation',
-		    'RCTLinkingIOS',
-		    'RCTGeolocation',
-		    'RCTImage',
-		    'RCTNetwork',
-		    'RCTText',
-		    'RCTVibration',
-		    'RCTWebSocket',
-		    'DevSupport',
-		    'CxxBridge',
-		    ]
-		    
-		    pod 'DoubleConversion', :podspec => '../node_modules/react-native/third-party-podspecs/DoubleConversion.podspec'
-		    pod 'glog', :podspec => '../node_modules/react-native/third-party-podspecs/glog.podspec'
-		    pod 'Folly', :podspec => '../node_modules/react-native/third-party-podspecs/Folly.podspec'
-		    
-		    pod 'RNCharts', :path => '../node_modules/react-native-charts-wrapper'
-		    pre_install do |installer|
-		        installer.analysis_result.specifications.each do |s|
-		            s.swift_version = '5.0' unless s.swift_version
-		        end
-		    end
-
-		end
-			
-
-		```
-
+	*   **use cocoapods(suggested)**
 		
+		* add `pod 'RNCharts', :path => '../node_modules/react-native-charts-wrapper'` to ios/Podfile
+
 		* cd ios && pod install
 		* open demo.xcworkspace
 		* create a empty swift file, the xcode will prompt a message 'Would you like to configure an Objective-C bridging header?' to Create Bridging Header, accept it.
 
 		![](https://raw.githubusercontent.com/wuxudong/react-native-charts-wrapper/master/installation_guide/create-oc-bridging-header.png)
-
-		* if you can't open development menu in iOS simulator, you can remove other libraries except Pods_demo.framework, and delete other targets except demo.
-
-		![](https://raw.githubusercontent.com/wuxudong/react-native-charts-wrapper/master/installation_guide/ios_project_settings.png)
-
+		
 		* run it from XCode or run `react-native run-ios`, that is it.
 
 		![](https://raw.githubusercontent.com/wuxudong/react-native-charts-wrapper/master/installation_guide/iOS.png)
@@ -220,7 +163,7 @@ react-native run-android, that is it.
 
 	* **manual setup**
 
-		Sometime `use_frameworks!` in Podfile conflict with other libs like  react-native-maps.  In this case, you can link this lib manually.
+		You can also link this lib manually.
 	
 		* Add Source Files
 		
