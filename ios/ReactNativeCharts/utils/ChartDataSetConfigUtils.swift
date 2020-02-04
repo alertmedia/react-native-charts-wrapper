@@ -60,7 +60,7 @@ class ChartDataSetConfigUtils: NSObject {
             } else {
                 let customFormatter = NumberFormatter()
                 customFormatter.positiveFormat = valueFormatter.stringValue
-                customFormatter.negativeFormat = valueFormatter.stringValue
+                customFormatter.negativeFormat = "-\(valueFormatter.stringValue)"
 
                 dataSet.valueFormatter = DefaultValueFormatter(formatter: customFormatter);
             }
@@ -71,7 +71,7 @@ class ChartDataSetConfigUtils: NSObject {
         if config["axisDependency"].string != nil {
             dataSet.axisDependency = BridgeUtils.parseAxisDependency(config["axisDependency"].stringValue)
         }
-        
+
         if let font = FontUtils.getFont(config) {
             dataSet.valueFont = font
         }

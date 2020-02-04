@@ -417,7 +417,7 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
             } else {
               let customFormatter = NumberFormatter()
               customFormatter.positiveFormat = valueFormatter.stringValue
-              customFormatter.negativeFormat = valueFormatter.stringValue
+              customFormatter.negativeFormat = "-\(valueFormatter.stringValue)"
 
               axis.valueFormatter = DefaultAxisValueFormatter(formatter: customFormatter);
           }
