@@ -1,8 +1,5 @@
 package com.github.wuxudong.rncharts.charts;
 
-import android.content.res.ColorStateList;
-import android.os.Build;
-
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
@@ -24,7 +21,6 @@ import com.github.mikephil.charting.formatter.LargeValueFormatter;
 import com.github.mikephil.charting.formatter.PercentFormatter;
 import com.github.mikephil.charting.highlight.Highlight;
 import com.github.wuxudong.rncharts.data.DataExtract;
-import com.github.wuxudong.rncharts.markers.RNLineMarkerView;
 import com.github.wuxudong.rncharts.markers.RNRectangleMarkerView;
 import com.github.wuxudong.rncharts.utils.BridgeUtils;
 import com.github.wuxudong.rncharts.utils.EasingFunctionHelper;
@@ -284,11 +280,13 @@ public abstract class ChartBaseManager<T extends Chart, U extends Entry> extends
         }
 
         if (BridgeUtils.validate(propMap, ReadableType.Number, "textColor")) {
-            marker.getTvContent().setTextColor(propMap.getInt("textColor"));
+            marker.getTvContentLeft().setTextColor(propMap.getInt("textColor"));
+            marker.getTvContentRight().setTextColor(propMap.getInt("textColor"));
         }
 
         if (BridgeUtils.validate(propMap, ReadableType.Number, "textSize")) {
-            marker.getTvContent().setTextSize(propMap.getInt("textSize"));
+            marker.getTvContentLeft().setTextSize(propMap.getInt("textSize"));
+            marker.getTvContentRight().setTextSize(propMap.getInt("textSize"));
         }
 
         chart.setMarker(marker);
@@ -447,10 +445,12 @@ public abstract class ChartBaseManager<T extends Chart, U extends Entry> extends
                     timeUnit = TimeUnit.valueOf(propMap.getString("timeUnit").toUpperCase());
                 }
                 Locale locale = Locale.getDefault();
-                
+
+                /*
                 if (BridgeUtils.validate(propMap, ReadableType.String, "locale")) {
                     locale = Locale.forLanguageTag(propMap.getString("locale"));
                 }
+                */
 
                 axis.setValueFormatter(new DateFormatter(valueFormatterPattern, since, timeUnit, locale));
             } else {
