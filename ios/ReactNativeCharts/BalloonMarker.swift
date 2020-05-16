@@ -30,6 +30,8 @@ open class BalloonMarker: MarkerView {
 
     fileprivate var labelns: NSString?
     fileprivate var labelHtml: NSAttributedString?
+    fileprivate var leftLabel: String?
+    fileprivate var rightLabel: String?
     fileprivate var leftLabelHtml: NSAttributedString?
     fileprivate var rightLabelHtml: NSAttributedString?
     fileprivate var _labelSize: CGSize = CGSize()
@@ -403,6 +405,14 @@ open class BalloonMarker: MarkerView {
           return
         }
 
+        if let isHtml = self.isHtml, isHtml, self.labelHtml == nil {
+          return
+        }
+      
+        if let isSideBySide = self.isSideBySide, isSideBySide, (self.leftLabelHtml == nil || self.rightLabelHtml == nil) {
+          return
+        }
+
         /*
         var newPoint = point
         newPoint.y = 20 //_size.height
@@ -451,7 +461,7 @@ open class BalloonMarker: MarkerView {
         var label : String;
         var leftLabel = "";
         var rightLabel = "";
-
+      
         if let candleEntry = entry as? CandleChartDataEntry {
             label = candleEntry.close.description
         } else {
@@ -471,6 +481,13 @@ open class BalloonMarker: MarkerView {
                     label = object["marker"].arrayValue[highlight.stackIndex].stringValue
                 }
 
+                if (NSString(utf8String: label) == self.labelns) {
+                  if let isHtml = self.isHtml, isHtml, let _ = self.labelHtml {
+                    // NOTE: html label is ready, skip initialization & draw it
+                    return
+                  }
+                }
+
                 if object["markerTextColor"].exists() {
                   self.textColor = RCTConvert.uiColor(object["markerTextColor"].intValue)
                 }
@@ -480,6 +497,12 @@ open class BalloonMarker: MarkerView {
                 leftLabel = object["leftMarker"].stringValue;
                 rightLabel = object["rightMarker"].stringValue;
 
+                if leftLabel == self.leftLabel, rightLabel == self.rightLabel,
+                  let _ = leftLabelHtml, let _ = rightLabelHtml {
+                  // NOTE: html label is ready, skip initialization & draw it
+                  return
+                }
+              
                 if (object["dividerColor"].exists()) {
                     self.labelDividerColor = RCTConvert.uiColor(object["dividerColor"].intValue)
                 }
@@ -493,6 +516,8 @@ open class BalloonMarker: MarkerView {
         // set normal label first
         self.labelns = label as NSString
         self.labelHtml = nil
+        self.leftLabel = leftLabel
+        self.rightLabel = rightLabel
         self.leftLabelHtml = nil
         self.rightLabelHtml = nil
 
@@ -510,61 +535,83 @@ open class BalloonMarker: MarkerView {
           self._paragraphStyle?.alignment = .natural
 
           if let leftData = leftLabel.data(using: .utf8), let rightData = rightLabel.data(using: .utf8) {
+            // NOTE: App crashes if NSMutableAttributedString is initialized in sync queue
+            DispatchQueue.main.async {
+              if let htmlLabel = try? NSMutableAttributedString(
+                data: leftData,
+                options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.html,
+                          NSAttributedString.DocumentReadingOptionKey.characterEncoding: String.Encoding.utf8.rawValue],
+                documentAttributes: nil) {
 
-            if let htmlLabel = try? NSMutableAttributedString(
-              data: leftData,
-              options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.html,
+                htmlLabel.addAttributes([
+                  .font: self.font!,
+                  .paragraphStyle: self._paragraphStyle!],
+                  range: NSRange(location: 0, length: htmlLabel.length))
+
+                self.leftLabelHtml = htmlLabel
+                self._labelSize = CGSize(width: (self.leftLabelHtml?.size() ?? CGSize.zero).width,
+                                    height: (self.leftLabelHtml?.size() ?? CGSize.zero).height)
+              }
+
+              if let htmlLabel = try? NSMutableAttributedString(
+                data: rightData,
+                options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.html,
                         NSAttributedString.DocumentReadingOptionKey.characterEncoding: String.Encoding.utf8.rawValue],
-              documentAttributes: nil) {
+                documentAttributes: nil) {
 
-              htmlLabel.addAttributes([
+                htmlLabel.addAttributes([
                 .font: self.font!,
                 .paragraphStyle: self._paragraphStyle!],
                 range: NSRange(location: 0, length: htmlLabel.length))
 
-              self.leftLabelHtml = htmlLabel
-              self._labelSize = CGSize(width: (self.leftLabelHtml?.size() ?? CGSize.zero).width,
-                                  height: (self.leftLabelHtml?.size() ?? CGSize.zero).height)
+                self.rightLabelHtml = htmlLabel
+                self._labelSize.width += (self.rightLabelHtml?.size() ?? CGSize.zero).width
+                self._labelSize.height = max((self.rightLabelHtml?.size() ?? CGSize.zero).height, self._labelSize.height)
+              }
+
+              // add extra width for divider and insets
+              self._labelSize.width += self.labelDividerWidth
+              self._labelSize.width += self.dividerInsets.left + self.dividerInsets.right
+
+              // re-calculate drawing size
+              self._size.width = self._labelSize.width + self.insets.left + self.insets.right
+              self._size.height = self._labelSize.height + self.insets.top + self.insets.bottom
+              self._size.width = max(self.minimumSize.width, self._size.width)
+              self._size.height = max(self.minimumSize.height, self._size.height)
+
+              // re-draw the marker
+              self.chartView?.setNeedsDisplay()
             }
-
-            if let htmlLabel = try? NSMutableAttributedString(
-              data: rightData,
-              options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.html,
-                      NSAttributedString.DocumentReadingOptionKey.characterEncoding: String.Encoding.utf8.rawValue],
-              documentAttributes: nil) {
-
-              htmlLabel.addAttributes([
-              .font: self.font!,
-              .paragraphStyle: self._paragraphStyle!],
-              range: NSRange(location: 0, length: htmlLabel.length))
-
-              self.rightLabelHtml = htmlLabel
-              self._labelSize.width += (self.rightLabelHtml?.size() ?? CGSize.zero).width
-              self._labelSize.height = max((self.rightLabelHtml?.size() ?? CGSize.zero).height, self._labelSize.height)
-            }
-
-            // add extra width for divider and insets
-            self._labelSize.width += self.labelDividerWidth
-            self._labelSize.width += self.dividerInsets.left + self.dividerInsets.right
           }
 
         } else if (self.isHtml ?? false) {
           // override with html label
           if let data = label.data(using: .utf8) {
+            // NOTE: App crashes if NSMutableAttributedString is initialized in sync queue
+            DispatchQueue.main.async {
+              if let htmlLabel = try? NSMutableAttributedString(
+                data: data,
+                options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.html,
+                          NSAttributedString.DocumentReadingOptionKey.characterEncoding: String.Encoding.utf8.rawValue],
+                documentAttributes: nil) {
 
-            if let htmlLabel = try? NSMutableAttributedString(
-              data: data,
-              options: [NSAttributedString.DocumentReadingOptionKey.documentType: NSAttributedString.DocumentType.html,
-                        NSAttributedString.DocumentReadingOptionKey.characterEncoding: String.Encoding.utf8.rawValue],
-              documentAttributes: nil) {
+                htmlLabel.addAttributes([
+                  .font: self.font!,
+                  .paragraphStyle: self._paragraphStyle!],
+                  range: NSRange(location: 0, length: htmlLabel.length))
 
-              htmlLabel.addAttributes([
-                .font: self.font!,
-                .paragraphStyle: self._paragraphStyle!],
-                range: NSRange(location: 0, length: htmlLabel.length))
+                self.labelHtml = htmlLabel
+                self._labelSize = self.labelHtml?.size() ?? CGSize.zero
 
-              self.labelHtml = htmlLabel
-              self._labelSize = self.labelHtml?.size() ?? CGSize.zero
+                // re-calculate drawing size
+                self._size.width = self._labelSize.width + self.insets.left + self.insets.right
+                self._size.height = self._labelSize.height + self.insets.top + self.insets.bottom
+                self._size.width = max(self.minimumSize.width, self._size.width)
+                self._size.height = max(self.minimumSize.height, self._size.height)
+
+                // re-draw the marker
+                self.chartView?.setNeedsDisplay()
+              }
             }
           }
         }
