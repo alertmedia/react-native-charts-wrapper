@@ -74,11 +74,16 @@ class RNPieChartView: RNChartViewBase {
             }
 
             let fontSize = json["size"].float != nil ? CGFloat(json["size"].floatValue) : CGFloat(12)
+            let fontFamily = json["fontFamily"].stringValue
+            var font = NSUIFont.systemFont(ofSize: fontSize)
+            if let customFont = NSUIFont(name: fontFamily, size: fontSize) {
+                font = customFont
+            }
 
             attrString = NSMutableAttributedString(string: json["text"].stringValue)
             attrString?.setAttributes([
                 NSAttributedString.Key.foregroundColor: color!,
-                NSAttributedString.Key.font: NSUIFont.systemFont(ofSize: fontSize),
+                NSAttributedString.Key.font: font,
                 NSAttributedString.Key.paragraphStyle: paragraphStyle
                 ], range: NSMakeRange(0, attrString!.length))
         }
