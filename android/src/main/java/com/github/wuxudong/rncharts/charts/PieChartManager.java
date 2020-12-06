@@ -1,5 +1,6 @@
 package com.github.wuxudong.rncharts.charts;
 
+import android.graphics.Typeface;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableType;
 import com.facebook.react.uimanager.ThemedReactContext;
@@ -61,6 +62,12 @@ public class PieChartManager extends ChartBaseManager<PieChart, PieEntry> {
 
         if (BridgeUtils.validate(propMap, ReadableType.Number, "size")) {
             chart.setCenterTextSize((float) propMap.getDouble("size"));
+        }
+
+        if (BridgeUtils.validate(propMap, ReadableType.String, "fontFamily")) {
+            String fontFamily = propMap.getString("fontFamily");
+            int style = (fontFamily.toLowerCase().contains("bold")) ? Typeface.BOLD : Typeface.NORMAL;
+            chart.setCenterTextTypeface(Typeface.create(fontFamily, style));
         }
     }
 
