@@ -456,9 +456,6 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
                 ),
                 strokeSize: json["markerStrokeSize"].intValue
             )
-            if json["useLineIndicator"].exists() && json["useLineIndicator"].boolValue {
-                marker.useLineIndicator = true
-            }
             chart.marker = marker
             marker.chartView = chart
 
