@@ -48,15 +48,15 @@ open class BalloonMarker: MarkerView {
     fileprivate let barOverwrapHeight: CGFloat = 10.0
     fileprivate let strokeWidth: CGFloat = 0.1
 
-    public init(color: UIColor, font: UIFont, textColor: UIColor) {
+  public init(color: UIColor, font: UIFont, textColor: UIColor, textAlign: NSTextAlignment) {
         super.init(frame: CGRect.zero);
         self.color = color
         self.font = font
         self.textColor = textColor
         self.useLineIndicator = false
 
-        self._paragraphStyle = NSParagraphStyle.default.mutableCopy() as? NSMutableParagraphStyle
-        self._paragraphStyle?.alignment = .center
+        _paragraphStyle = NSParagraphStyle.default.mutableCopy() as? NSMutableParagraphStyle
+        _paragraphStyle?.alignment = textAlign
     }
 
     public required init?(coder aDecoder: NSCoder) {
@@ -408,7 +408,7 @@ open class BalloonMarker: MarkerView {
         if let isHtml = self.isHtml, isHtml, self.labelHtml == nil {
           return
         }
-      
+
         if let isSideBySide = self.isSideBySide, isSideBySide, (self.leftLabelHtml == nil || self.rightLabelHtml == nil) {
           return
         }
@@ -461,7 +461,7 @@ open class BalloonMarker: MarkerView {
         var label : String;
         var leftLabel = "";
         var rightLabel = "";
-      
+
         if let candleEntry = entry as? CandleChartDataEntry {
             label = candleEntry.close.description
         } else {
@@ -502,7 +502,7 @@ open class BalloonMarker: MarkerView {
                   // NOTE: html label is ready, skip initialization & draw it
                   return
                 }
-              
+
                 if (object["dividerColor"].exists()) {
                     self.labelDividerColor = RCTConvert.uiColor(object["dividerColor"].intValue)
                 }

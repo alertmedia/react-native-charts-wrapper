@@ -12,6 +12,7 @@ import com.github.wuxudong.rncharts.data.PieDataExtract;
 import com.github.wuxudong.rncharts.listener.RNOnChartGestureListener;
 import com.github.wuxudong.rncharts.listener.RNOnChartValueSelectedListener;
 import com.github.wuxudong.rncharts.utils.BridgeUtils;
+import com.github.wuxudong.rncharts.utils.TypefaceUtils;
 
 public class PieChartManager extends ChartBaseManager<PieChart, PieEntry> {
 
@@ -31,6 +32,25 @@ public class PieChartManager extends ChartBaseManager<PieChart, PieEntry> {
     @Override
     DataExtract getDataExtract() {
         return new PieDataExtract();
+    }
+
+    @ReactProp(name = "extraOffsets")
+    public void setExtraOffsets(PieChart chart, ReadableMap propMap) {
+        double left = 0, top = 0, right = 0, bottom = 0;
+
+        if (BridgeUtils.validate(propMap, ReadableType.Number, "left")) {
+            left = propMap.getDouble("left");
+        }
+        if (BridgeUtils.validate(propMap, ReadableType.Number, "top")) {
+            top = propMap.getDouble("top");
+        }
+        if (BridgeUtils.validate(propMap, ReadableType.Number, "right")) {
+            right = propMap.getDouble("right");
+        }
+        if (BridgeUtils.validate(propMap, ReadableType.Number, "bottom")) {
+            bottom = propMap.getDouble("bottom");
+        }
+        chart.setExtraOffsets((float) left, (float) top, (float) right, (float) bottom);
     }
 
     @ReactProp(name = "drawEntryLabels")
@@ -65,9 +85,7 @@ public class PieChartManager extends ChartBaseManager<PieChart, PieEntry> {
         }
 
         if (BridgeUtils.validate(propMap, ReadableType.String, "fontFamily")) {
-            String fontFamily = propMap.getString("fontFamily");
-            int style = (fontFamily.toLowerCase().contains("bold")) ? Typeface.BOLD : Typeface.NORMAL;
-            chart.setCenterTextTypeface(Typeface.create(fontFamily, style));
+            chart.setCenterTextTypeface(TypefaceUtils.getTypeface(chart, propMap));
         }
     }
 
@@ -104,6 +122,11 @@ public class PieChartManager extends ChartBaseManager<PieChart, PieEntry> {
     @ReactProp(name = "entryLabelTextSize")
     public void setEntryLabelTextSize(PieChart chart, float size) {
         chart.setEntryLabelTextSize(size);
+    }
+
+    @ReactProp(name = "entryLabelFontFamily")
+    public void setEntryLabelFontFamily(PieChart chart, String fontFamily) {
+        chart.setEntryLabelTypeface(TypefaceUtils.getTypeface(chart, fontFamily));
     }
 
     @ReactProp(name = "maxAngle")

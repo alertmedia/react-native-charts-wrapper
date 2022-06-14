@@ -183,6 +183,10 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
         chart.noDataText = noDataText
     }
 
+    func setNoDataTextColor(_ color: Int) {
+        chart.noDataTextColor = RCTConvert.uiColor(color)
+    }
+
     func setTouchEnabled(_ touchEnabled: Bool) {
         chart.isUserInteractionEnabled = touchEnabled
     }
@@ -245,10 +249,6 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
         if json["position"].string != nil {
             xAxis.labelPosition = BridgeUtils.parseXAxisLabelPosition(json["position"].stringValue)
         }
-
-        if json["yOffset"].number != nil {
-            xAxis.yOffset = CGFloat(truncating: json["yOffset"].numberValue)
-        }
     }
 
     func setCommonAxisConfig(_ axis: AxisBase, config: JSON) {
@@ -281,6 +281,10 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
 
         if config["textSize"].float != nil {
             axis.labelFont = axis.labelFont.withSize(CGFloat(config["textSize"].floatValue))
+        }
+
+        if config["yOffset"].number != nil {
+            axis.yOffset = CGFloat(truncating: config["yOffset"].numberValue)
         }
 
         if config["gridColor"].int != nil {
@@ -441,22 +445,36 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
         if json["textSize"].exists() && json["textSize"].float != nil {
             markerFont = markerFont.withSize(CGFloat(json["textSize"].floatValue))
         }
+        switch (json["markerType"].string) {
+        case "circle":
+            let marker = CircleMarker(
+                color: RCTConvert.uiColor(json["markerColor"].intValue),
+                strokeColor: RCTConvert.uiColor(json["markerStrokeColor"].intValue),
+                size: CGSize(
+                    width: json["markerSize"].intValue,
+                    height: json["markerSize"].intValue
+                ),
+                strokeSize: json["markerStrokeSize"].intValue
+            )
+            if json["useLineIndicator"].exists() && json["useLineIndicator"].boolValue {
+                marker.useLineIndicator = true
+            }
+            chart.marker = marker
+            marker.chartView = chart
 
-        // TODO fontFamily, fontStyle
-
-        let balloonMarker = BalloonMarker(
-            color: RCTConvert.uiColor(json["markerColor"].intValue),
-            font: markerFont,
-            textColor: RCTConvert.uiColor(json["textColor"].intValue))
-
-        if json["useLineIndicator"].exists() && json["useLineIndicator"].boolValue {
-            balloonMarker.useLineIndicator = true
+        default:
+            let marker = BalloonMarker(
+                color: RCTConvert.uiColor(json["markerColor"].intValue),
+                font: markerFont,
+                textColor: RCTConvert.uiColor(json["textColor"].intValue),
+                textAlign: RCTConvert.nsTextAlignment(json["textAlign"].stringValue)
+            )
+            if json["useLineIndicator"].exists() && json["useLineIndicator"].boolValue {
+                marker.useLineIndicator = true
+            }
+            chart.marker = marker
+            marker.chartView = chart
         }
-
-        chart.marker = balloonMarker
-
-        balloonMarker.chartView = chart
-
     }
 
     func setHighlights(_ config: NSArray) {
@@ -488,6 +506,10 @@ open class RNChartViewBase: UIView, ChartViewDelegate {
 
     @objc public func chartTranslated(_ chartView: ChartViewBase, dX: CoreGraphics.CGFloat, dY: CoreGraphics.CGFloat) {
         sendEvent("chartTranslated")
+    }
+
+    @objc public func chartViewDidEndPanning(_ chartView: ChartViewBase) {
+        sendEvent("chartPanEnd")
     }
 
     func sendEvent(_ action:String) {
